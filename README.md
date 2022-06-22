@@ -1,5 +1,7 @@
 # AWS Cloudformation scripts
 
+Make creating EC2 instances easier.
+
 ## Getting started
 
 List stacks
