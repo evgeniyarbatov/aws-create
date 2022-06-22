@@ -2,9 +2,5 @@
     {
         "ParameterKey": "KeyName",
         "ParameterValue": "aws_dev"
-    },
-    {
-        "ParameterKey": "LambdaHandler",
-        "ParameterValue": "t2.nano"
     }
 ]

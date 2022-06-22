@@ -4,24 +4,14 @@
   "Description" : "Create EC2 instance with HTTP server",
   
   "Parameters" : {
-      
     "KeyName": {
       "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
       "Type": "AWS::EC2::KeyPair::KeyName",
       "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
-    },    
-
-    "InstanceType" : {
-      "Description" : "WebServer EC2 instance type",
-      "Type" : "String",
-      "Default" : "t2.nano",
-      "AllowedValues" : [ "t2.nano", "t2.micro"],
-      "ConstraintDescription" : "must be a valid EC2 instance type."
     }
   },
   
-  "Resources" : {     
-      
+  "Resources" : { 
     "WebServerInstance": {  
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
@@ -90,11 +80,11 @@
         }
       },
       "Properties": {
-        "ImageId" : "ami-04d9e855d716f9c99",
-        "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "WebServerSecurityGroup"} ],
-        "KeyName"        : { "Ref" : "KeyName" },
-        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+        "ImageId"         : "ami-04d9e855d716f9c99",
+        "InstanceType"    : "t2.nano",
+        "SecurityGroups"  : [ {"Ref" : "WebServerSecurityGroup"} ],
+        "KeyName"         : { "Ref" : "KeyName" },
+        "UserData"        : { "Fn::Base64" : { "Fn::Join" : ["", [
           "#!/bin/bash -xe\n",
           "apt-get update -y\n",
 
@@ -110,12 +100,7 @@
           "         --stack ", { "Ref" : "AWS::StackName" },
           "         --resource WebServerInstance ",
           "         --region ", { "Ref" : "AWS::Region" }, "\n"
-        ]]}},
-        "CreationPolicy" : {
-          "ResourceSignal" : {
-            "Timeout" : "PT5M"
-          }
-        }
+        ]]}}
       }
     },
 
