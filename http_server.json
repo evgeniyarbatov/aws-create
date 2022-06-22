@@ -1,5 +1,5 @@
 {
-  "AWSTemplateFormatVersion" : "2022-06-22",
+  "AWSTemplateFormatVersion" : "2010-09-09",
   
   "Description" : "Create EC2 instance with HTTP server",
   
@@ -110,15 +110,15 @@
           "         --stack ", { "Ref" : "AWS::StackName" },
           "         --resource WebServerInstance ",
           "         --region ", { "Ref" : "AWS::Region" }, "\n"
-        ]]}        
-      },
-      "CreationPolicy" : {
-        "ResourceSignal" : {
-          "Timeout" : "PT5M"
+        ]]}},
+        "CreationPolicy" : {
+          "ResourceSignal" : {
+            "Timeout" : "PT5M"
+          }
         }
       }
     },
-    
+
     "WebServerSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
@@ -129,8 +129,7 @@
         ]
       }      
     }
-  }
-},          
+  },          
 
   "Outputs" : {
     "WebsiteURL" : {
