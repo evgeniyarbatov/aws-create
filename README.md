@@ -13,15 +13,15 @@ aws cloudformation list-stacks
 Validate the template
 ```
 aws cloudformation validate-template \
---template-body file://templates/http.json
+--template-body file://templates/http.yaml
 ```
 
 Deploy the template
 ```
 aws cloudformation create-stack \
 --stack-name http \
---template-body file://templates/http.json \
---parameters file://parameters/http.json
+--template-body file://templates/http.yaml \
+--parameters file://parameters/http.yaml
 ```
 
 Delete stack
