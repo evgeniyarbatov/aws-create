@@ -2,3 +2,5 @@
   ParameterValue: aws_dev
 - ParameterKey: InstanceType
   ParameterValue: t2.nano
+- ParameterKey: InstanceName
+  ParameterValue: http

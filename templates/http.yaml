@@ -2,17 +2,21 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Create EC2 instance with HTTP server
 Parameters:
   KeyName:
-    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Description: EC2 keypair
     Type: 'AWS::EC2::KeyPair::KeyName'
     ConstraintDescription: must be the name of an existing EC2 KeyPair.
   InstanceType:
-    Description: WebServer EC2 instance type
+    Description: EC2 instance type
     Type: String
     Default: t2.nano
     AllowedValues:
       - t2.nano
       - t2.micro
     ConstraintDescription: must be a valid EC2 instance type.
+  InstanceName:
+    Description: Name of instance
+    Type: String
+    Default: http  
 Mappings:
   AWSRegionAMIEC2:
     ap-southeast-1:
@@ -105,6 +109,9 @@ Resources:
       SecurityGroups:
         - !Ref WebServerSecurityGroup
       KeyName: !Ref KeyName
+      Tags: 
+        - Key: "Name"
+          Value: !Ref InstanceName
       UserData: !Base64 
         'Fn::Join':
           - ''
