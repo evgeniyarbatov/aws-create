@@ -1,0 +1,26 @@
+[
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "aws_dev"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.nano"
+    },
+    {
+        "ParameterKey": "InstanceName",
+        "ParameterValue": "http"
+    },
+    {
+        "ParameterKey": "GitRepository",
+        "ParameterValue": "git@github.com:evgeniyarbatov/stargazing-on-the-run.git"
+    },
+    {
+        "ParameterKey": "GitName",
+        "ParameterValue": "Evgeny Arbatov"
+    },
+    {
+        "ParameterKey": "GitEmail",
+        "ParameterValue": "arbatovevgeny@gmail.com"
+    }
+]

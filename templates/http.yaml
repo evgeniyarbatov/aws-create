@@ -30,7 +30,13 @@ Resources:
           InstallAndRun:
             - Install
             - Configure
+            - PipInstall
+            - GitConfig
         Install:
+          packages:
+            apt:
+              - "git"
+              - "python3-pip"
           files:
             /etc/cfn/cfn-hup.conf:
               content: !Join 
@@ -100,6 +106,18 @@ Resources:
               command: systemctl enable cfn-hup.service
             02start_cfn_hup:
               command: systemctl start cfn-hup.service
+        PipInstall:
+          commands:
+            pip_packages:
+              command: pip3 install gpxpy pyproj pandas matplotlib python-dateutil
+        GitConfig:
+          commands:
+            set_name:
+              command: git config --global user.name !Ref 'GitName'
+            set_email:
+              command: git config --global user.email !Ref 'GitEmail'
+            checkout:
+              command: git clone !Ref GitRepository
     Properties:
       ImageId: !FindInMap 
         - AWSRegionArch2AMI
