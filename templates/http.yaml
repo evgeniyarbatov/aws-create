@@ -39,82 +39,60 @@ Resources:
               - npm: []
           files:
             /etc/cfn/cfn-hup.conf:
-              content: !Join 
-                - ''
-                - - |
-                    [main]
-                  - stack=
-                  - !Ref 'AWS::StackId'
-                  - |+
-
-                  - region=
-                  - !Ref 'AWS::Region'
-                  - |+
-
+              content: !Base64 
+                Fn::Sub: |
+                  [main]
+                  stack='${AWS::StackId}'
+                  region='${AWS::Region}'
               mode: '000400'
               owner: root
               group: root
             /etc/cfn/hooks.d/cfn-auto-reloader.conf:
-              content: !Join 
-                - ''
-                - - |
-                    [cfn-auto-reloader-hook]
-                  - |
-                    triggers=post.update
-                  - >
-                    path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init
-                  - 'action=/opt/aws/bin/cfn-init -v '
-                  - '         --stack '
-                  - !Ref 'AWS::StackName'
-                  - '         --resource WebServerInstance '
-                  - '         --configsets InstallAndRun '
-                  - '         --region '
-                  - !Ref 'AWS::Region'
-                  - |+
-
-                  - |
-                    runas=root
+              content: !Base64 
+                Fn::Sub: |
+                  [cfn-auto-reloader-hook]
+                  triggers=post.update
+                  path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init
+                  action=/opt/aws/bin/cfn-init -v 
+                  --stack '${AWS::StackName}'
+                  --resource WebServerInstance
+                  --configsets InstallAndRun
+                  --region '${AWS::Region}
+                  runas=root
               mode: '000400'
               owner: root
               group: root
             /home/ec2-user/app.js:
-              content: !Join 
-                - ''
-                - - |
-                    const express = require("express")
-                    const bodyParser = require('body-parser')
-                  - |+
-                    require('console-stamp')(console, '[HH:MM:ss.l]');
-                  - |+
-                    const app = express()
-                    const jsonParser = bodyParser.json()
-                  - |+
-                    module.exports = app
-                  - |+
-                    app.get("/", (req, res) => {
-                      console.log("Got GET")
-                      res.json({"result": "GET})
-                    })
-                  - |+
-                    app.post("/", jsonParser, (req, res) => {
-                      console.log("Got POST")
-                      res.json({"result": "POST});
-                    })
-                  - |+
+              content: !Base64 
+                Fn::Sub: |
+                  const express = require("express")
+                  const bodyParser = require('body-parser')
 
+                  require('console-stamp')(console, '[HH:MM:ss.l]');
+
+                  const app = express()
+                  const jsonParser = bodyParser.json()
+
+                  module.exports = app
+
+                  app.get("/", (req, res) => {
+                    console.log("Got GET")
+                    res.json({"result": "GET})
+                  })
+
+                  app.post("/", jsonParser, (req, res) => {
+                    console.log("Got POST")
+                    res.json({"result": "POST});
+                  })
               mode: '000400'
               owner: ec2-user
               group: ec2-user
             /home/ec2-user/server.js:
-              content: !Join 
-                - ''
-                - - |
-                    const app = require("./app")
-                    const port = 80
-                  - |+
-                    app.listen(port, () => console.log(`The server is listening on port ${port}`))
-                  - |+
-
+              content: !Base64 
+                Fn::Sub: |
+                  const app = require("./app")
+                  const port = 80
+                  app.listen(port, () => console.log(`The server is listening on port ${port}`))
               mode: '000400'
               owner: ec2-user
               group: ec2-user
@@ -146,26 +124,27 @@ Resources:
       Tags: 
         - Key: "Name"
           Value: !Ref InstanceName
-      UserData: !Sub |
-            #!/bin/bash -xe\n
-            yum update -y
-            yum install -y python3
-            yum install -y wget
-              
-            mkdir -p /opt/aws/bin
-            wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
-            python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
-              
-            /opt/aws/bin/cfn-init -v
-              --stack '${AWS::StackName}'
-              --resource WebServerInstance
-              --configsets InstallAndRun
-              --region '${AWS::Region}
+      UserData: !Base64 
+        Fn::Sub: |
+          #!/bin/bash -xe\n
+          yum update -y
+          yum install -y python3
+          yum install -y wget
             
-            /opt/aws/bin/cfn-signal -e $? 
-              --stack  '${AWS::StackName}'
-              --resource WebServerInstance 
-              --region '${AWS::Region}'
+          mkdir -p /opt/aws/bin
+          wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
+            
+          /opt/aws/bin/cfn-init -v
+            --stack '${AWS::StackName}'
+            --resource WebServerInstance
+            --configsets InstallAndRun
+            --region '${AWS::Region}'
+          
+          /opt/aws/bin/cfn-signal -e $? 
+            --stack  '${AWS::StackName}'
+            --resource WebServerInstance 
+            --region '${AWS::Region}'
   
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
