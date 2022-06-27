@@ -173,7 +173,7 @@ Resources:
           - - |
               #!/bin/bash -xe
             - |
-              apt-get update -y
+              apt-get update -y && apt-get install pip && pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
             - |
               # Install the files and packages from the metadata
             - '/opt/aws/bin/cfn-init -v '
