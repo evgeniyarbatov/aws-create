@@ -34,6 +34,6 @@ Get the DNS name
 ```
 aws cloudformation describe-stacks \
 --stack-name http \
---query 'Stacks[0].Outputs[?OutputKey==`WebsiteDNS`].OutputValue' \
+--query 'Stacks[0].Outputs[?OutputKey==`DNS`].OutputValue' \
 --output text
 ```
