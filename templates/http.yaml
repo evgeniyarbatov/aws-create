@@ -34,8 +34,8 @@ Resources:
         Install:
           packages:
             yum:
-              - nodejs: []
-              - npm: []
+              nodejs: []
+              npm: []
           files:
             /etc/cfn/cfn-hup.conf:
               content: !Base64 
