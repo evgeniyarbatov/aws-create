@@ -2,13 +2,7 @@
 
 Make creating EC2 instances easier.
 
-## Getting started
-
-List stacks
-
-```
-aws cloudformation list-stacks
-```
+## Useful commands
 
 Validate the template
 ```
