@@ -16,7 +16,11 @@ Parameters:
   InstanceName:
     Description: Name of instance
     Type: String
-    Default: http  
+    Default: http 
+  NodeSourceRepo:
+    Description: Nodesource RPM location
+    Type: String
+    Default: https://rpm.nodesource.com/setup_16.x  
 Mappings:
   AWSRegionAMIEC2:
     ap-southeast-1:
