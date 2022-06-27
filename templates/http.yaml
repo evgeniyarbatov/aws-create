@@ -29,7 +29,6 @@ Resources:
         configSets:
           InstallAndRun:
             - Install
-            - Configure
             - NpmInstall
             - StartServer
         Install:
@@ -161,9 +160,6 @@ Resources:
 Outputs:
   WebsiteURL:
     Description: Web server URL
-    Value: !Join 
-      - ''
-      - - 'http://'
-        - !GetAtt 
-          - WebServerInstance
-          - PublicDnsName
+    Value: !GetAtt 
+      - WebServerInstance
+      - PublicDnsName

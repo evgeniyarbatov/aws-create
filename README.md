@@ -30,10 +30,10 @@ aws cloudformation delete-stack \
 --stack-name http
 ```
 
-Get the IP address
+Get the DNS name
 ```
 aws cloudformation describe-stacks \
-    --stack-name "${stack_name}" \
-    --query 'Stacks[0].Outputs[?OutputKey==`MasterHostname`].OutputValue' \
-    --output text
+--stack-name http \
+--query 'Stacks[0].Outputs[?OutputKey==`WebsiteURL`].OutputValue' \
+--output text
 ```
