@@ -24,16 +24,16 @@ aws cloudformation create-stack \
 --parameters file://parameters/http.json
 ```
 
-Update stacks
-```
-aws cloudformation update-stack \
---stack-name http \
---template-body file://templates/http.yaml \
---parameters file://parameters/http.json
-```
-
 Delete stack
 ```
 aws cloudformation delete-stack \
 --stack-name http
+```
+
+Get the IP address
+```
+aws cloudformation describe-stacks \
+    --stack-name "${stack_name}" \
+    --query 'Stacks[0].Outputs[?OutputKey==`MasterHostname`].OutputValue' \
+    --output text
 ```

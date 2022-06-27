@@ -53,10 +53,10 @@ Resources:
                   [cfn-auto-reloader-hook]
                   triggers=post.update
                   path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init
-                  action=/opt/aws/bin/cfn-init -v 
-                  --stack '${AWS::StackName}'
-                  --resource WebServerInstance
-                  --configsets InstallAndRun
+                  action=/opt/aws/bin/cfn-init -v \
+                  --stack '${AWS::StackName}' \
+                  --resource WebServerInstance \
+                  --configsets InstallAndRun \
                   --region '${AWS::Region}
                   runas=root
               mode: '000400'
@@ -92,7 +92,7 @@ Resources:
                 Fn::Sub: |
                   const app = require("./app")
                   const port = 80
-                  app.listen(port, () => console.log(`The server is listening on port ${port}`))
+                  app.listen(port, () => console.log(`The server is listening}`))
               mode: '000400'
               owner: ec2-user
               group: ec2-user
@@ -126,26 +126,25 @@ Resources:
           Value: !Ref InstanceName
       UserData: !Base64 
         Fn::Sub: |
-          #!/bin/bash -xe\n
+          #!/bin/bash
           yum update -y
-          yum install -y python3
+          yum install -y python38 python38-pip
           yum install -y wget
             
           mkdir -p /opt/aws/bin
           wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
           python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
             
-          /opt/aws/bin/cfn-init -v
-            --stack '${AWS::StackName}'
-            --resource WebServerInstance
-            --configsets InstallAndRun
+          /opt/aws/bin/cfn-init -v \
+            --stack '${AWS::StackName}' \
+            --resource WebServerInstance \
+            --configsets InstallAndRun \
             --region '${AWS::Region}'
           
-          /opt/aws/bin/cfn-signal -e $? 
-            --stack  '${AWS::StackName}'
-            --resource WebServerInstance 
+          /opt/aws/bin/cfn-signal -e $? \
+            --stack  '${AWS::StackName}' \
+            --resource WebServerInstance \
             --region '${AWS::Region}'
-  
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
