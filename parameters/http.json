@@ -10,17 +10,5 @@
     {
         "ParameterKey": "InstanceName",
         "ParameterValue": "http"
-    },
-    {
-        "ParameterKey": "GitRepository",
-        "ParameterValue": "git@github.com:evgeniyarbatov/stargazing-on-the-run.git"
-    },
-    {
-        "ParameterKey": "GitName",
-        "ParameterValue": "Evgeny Arbatov"
-    },
-    {
-        "ParameterKey": "GitEmail",
-        "ParameterValue": "arbatovevgeny@gmail.com"
     }
 ]

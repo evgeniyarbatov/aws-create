@@ -21,7 +21,12 @@ Deploy the template
 aws cloudformation create-stack \
 --stack-name http \
 --template-body file://templates/http.yaml \
---parameters file://parameters/http.yaml
+--parameters file://parameters/http.json
+```
+
+Check stacks
+```
+aws cloudformation list-stacks
 ```
 
 Delete stack

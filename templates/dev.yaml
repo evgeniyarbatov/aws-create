@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: Create EC2 instance for basic HTTP server
+Description: Create EC2 instance for devserver
 Parameters:
   KeyName:
     Description: EC2 keypair
@@ -30,13 +30,13 @@ Resources:
           InstallAndRun:
             - Install
             - Configure
-            - NpmInstall
-            - StartServer
+            - PipInstall
+            - GitConfig
         Install:
           packages:
             apt:
-              - "nodejs"
-              - "npm"
+              - "git"
+              - "python3-pip"
           files:
             /etc/cfn/cfn-hup.conf:
               content: !Join 
@@ -100,64 +100,27 @@ Resources:
               mode: '000400'
               owner: root
               group: root
-            /home/ubuntu/app.js:
-              content: !Join 
-                - ''
-                - - |
-                    const express = require("express")
-                    const bodyParser = require('body-parser')
-                  - |+
-                    require('console-stamp')(console, '[HH:MM:ss.l]');
-                  - |+
-                    const app = express()
-                    const jsonParser = bodyParser.json()
-                  - |+
-                    module.exports = app
-                  - |+
-                    app.get("/", (req, res) => {
-                      console.log("Got GET")
-                      res.json({"result": "GET})
-                    })
-                  - |+
-                    app.post("/", jsonParser, (req, res) => {
-                      console.log("Got POST")
-                      res.json({"result": "POST});
-                    })
-                  - |+
-
-              mode: '000400'
-              owner: ubuntu
-              group: ubuntu
-            /home/ubuntu/server.js:
-              content: !Join 
-                - ''
-                - - |
-                    const app = require("./app")
-                    const port = 80
-                  - |+
-                    app.listen(port, () => console.log(`The server is listening on port ${port}`))
-                  - |+
-
-              mode: '000400'
-              owner: ubuntu
-              group: ubuntu
         Configure:
           commands:
             01enable_cfn_hup:
               command: systemctl enable cfn-hup.service
             02start_cfn_hup:
               command: systemctl start cfn-hup.service
-        NpmInstall:
+        PipInstall:
           commands:
-            npm_packages:
-              command: npm install -y -g express body-parser console-stamp forever
-        StartServer:
-           commands:
-            forever_start:
-              command: forever start /home/ubuntu/server.js        
+            pip_packages:
+              command: pip3 install gpxpy pyproj pandas matplotlib python-dateutil
+        GitConfig:
+          commands:
+            set_name:
+              command: git config --global user.name !Ref 'GitName'
+            set_email:
+              command: git config --global user.email !Ref 'GitEmail'
+            checkout:
+              command: git clone !Ref GitRepository
     Properties:
       ImageId: !FindInMap 
-        - AWSRegionAMIEC2
+        - AWSRegionArch2AMI
         - !Ref 'AWS::Region'
         - Ubuntu
       InstanceType: !Ref InstanceType
@@ -198,12 +161,8 @@ Resources:
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
-      GroupDescription: Enable HTTP access via port 80
+      GroupDescription: Enable SSH access
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '80'
-          ToPort: '80'
-          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
