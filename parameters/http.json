@@ -10,5 +10,9 @@
     {
         "ParameterKey": "InstanceName",
         "ParameterValue": "http"
+    },
+    {
+        "ParameterKey": "NodeSourceRepo",
+        "ParameterValue": "https://rpm.nodesource.com/setup_16.x"
     }
 ]

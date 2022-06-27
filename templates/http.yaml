@@ -32,10 +32,6 @@ Resources:
             - NpmInstall
             - StartServer
         Install:
-          packages:
-            yum:
-              nodejs: []
-              npm: []
           files:
             /etc/cfn/cfn-hup.conf:
               content: !Base64 
@@ -129,7 +125,10 @@ Resources:
 
           yum update -y
           yum update -y aws-cfn-bootstrap 
-            
+
+          curl -sL '${NodeSourceRepo}' | sudo bash -
+          yum install -y nodejs
+
           /opt/aws/bin/cfn-init -v \
             --stack '${AWS::StackName}' \
             --resource WebServerInstance \
