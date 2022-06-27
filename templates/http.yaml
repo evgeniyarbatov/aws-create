@@ -1,6 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: Create EC2 instance for basic HTTP server
 Parameters:
+  InstanceImage:
+    Description: Instance image suitable for your AWS region
+    Type: String
+    Default: ami-0ba35dc9caf73d1c7
   KeyName:
     Description: EC2 keypair
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -16,15 +20,11 @@ Parameters:
   InstanceName:
     Description: Name of instance
     Type: String
-    Default: http 
+    Default: http
   NodeSourceRepo:
     Description: Nodesource RPM location
     Type: String
-    Default: https://rpm.nodesource.com/setup_16.x  
-Mappings:
-  AWSRegionAMIEC2:
-    ap-southeast-1:
-      AmazonLinux: ami-0ba35dc9caf73d1c7
+    Default: https://rpm.nodesource.com/setup_16.x
 Resources:
   WebServerInstance:
     Type: 'AWS::EC2::Instance'
@@ -106,10 +106,7 @@ Resources:
             forever_start:
               command: forever start /home/ec2-user/server.js        
     Properties:
-      ImageId: !FindInMap 
-        - AWSRegionAMIEC2
-        - !Ref 'AWS::Region'
-        - AmazonLinux
+      ImageId: !Ref InstanceImage
       InstanceType: !Ref InstanceType
       SecurityGroups:
         - !Ref WebServerSecurityGroup

@@ -1,5 +1,9 @@
 [
     {
+        "ParameterKey": "InstanceImage",
+        "ParameterValue": " ami-0ba35dc9caf73d1c7"
+    },
+    {
         "ParameterKey": "KeyName",
         "ParameterValue": "aws_dev"
     },
