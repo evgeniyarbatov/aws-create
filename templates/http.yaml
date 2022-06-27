@@ -57,7 +57,7 @@ Resources:
               group: root
             /home/ec2-user/app.js:
               content: |
-                  const express = require("express")
+                  const express = require('express')
                   const bodyParser = require('body-parser')
 
                   require('console-stamp')(console, '[HH:MM:ss.l]');
@@ -76,15 +76,15 @@ Resources:
                     console.log("Got POST")
                     res.json({"result": "POST"})
                   })
-              mode: '000400'
+              mode: '000644'
               owner: ec2-user
               group: ec2-user
             /home/ec2-user/server.js:
               content: |
                   const app = require("./app")
                   const port = 80
-                  app.listen(port, () => console.log(`The server is listening}`))
-              mode: '000400'
+                  app.listen(port, () => console.log(`The server is listening`))
+              mode: '000644'
               owner: ec2-user
               group: ec2-user
           services:
@@ -97,8 +97,10 @@ Resources:
                   - /etc/cfn/hooks.d/cfn-auto-reloader.conf
         NpmInstall:
           commands:
+            forever_install:
+              command: npm install -y -g forever
             npm_packages:
-              command: npm install -y -g express body-parser console-stamp forever
+              command: npm install --prefix /home/ec2-user -y express body-parser console-stamp
         StartServer:
            commands:
             forever_start:
