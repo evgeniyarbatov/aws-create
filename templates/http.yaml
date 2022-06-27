@@ -90,12 +90,12 @@ Resources:
 
                   app.get("/", (req, res) => {
                     console.log("Got GET")
-                    res.json({"result": "GET})
+                    res.json({"result": "GET"})
                   })
 
                   app.post("/", jsonParser, (req, res) => {
                     console.log("Got POST")
-                    res.json({"result": "POST});
+                    res.json({"result": "POST"})
                   })
               mode: '000400'
               owner: ec2-user
