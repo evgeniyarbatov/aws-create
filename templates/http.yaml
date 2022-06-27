@@ -20,7 +20,7 @@ Parameters:
 Mappings:
   AWSRegionAMIEC2:
     ap-southeast-1:
-      Ubuntu: ami-04d9e855d716f9c99
+      AmazonLinux: ami-0ba35dc9caf73d1c7
 Resources:
   WebServerInstance:
     Type: 'AWS::EC2::Instance'
@@ -34,9 +34,9 @@ Resources:
             - StartServer
         Install:
           packages:
-            apt:
-              - "nodejs"
-              - "npm"
+            yum:
+              - nodejs: []
+              - npm: []
           files:
             /etc/cfn/cfn-hup.conf:
               content: !Join 
@@ -77,30 +77,7 @@ Resources:
               mode: '000400'
               owner: root
               group: root
-            /lib/systemd/system/cfn-hup.service:
-              content: !Join 
-                - ''
-                - - |
-                    [Unit]
-                  - |+
-                    Description=cfn-hup daemon
-
-                  - |
-                    [Service]
-                  - |
-                    Type=simple
-                  - |
-                    ExecStart=/opt/aws/bin/cfn-hup
-                  - |+
-                    Restart=always
-
-                  - |
-                    [Install]
-                  - WantedBy=multi-user.target
-              mode: '000400'
-              owner: root
-              group: root
-            /home/ubuntu/app.js:
+            /home/ec2-user/app.js:
               content: !Join 
                 - ''
                 - - |
@@ -126,9 +103,9 @@ Resources:
                   - |+
 
               mode: '000400'
-              owner: ubuntu
-              group: ubuntu
-            /home/ubuntu/server.js:
+              owner: ec2-user
+              group: ec2-user
+            /home/ec2-user/server.js:
               content: !Join 
                 - ''
                 - - |
@@ -139,14 +116,16 @@ Resources:
                   - |+
 
               mode: '000400'
-              owner: ubuntu
-              group: ubuntu
-        Configure:
-          commands:
-            01enable_cfn_hup:
-              command: systemctl enable cfn-hup.service
-            02start_cfn_hup:
-              command: systemctl start cfn-hup.service
+              owner: ec2-user
+              group: ec2-user
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
         NpmInstall:
           commands:
             npm_packages:
@@ -154,12 +133,12 @@ Resources:
         StartServer:
            commands:
             forever_start:
-              command: forever start /home/ubuntu/server.js        
+              command: forever start /home/ec2-user/server.js        
     Properties:
       ImageId: !FindInMap 
         - AWSRegionAMIEC2
         - !Ref 'AWS::Region'
-        - Ubuntu
+        - AmazonLinux
       InstanceType: !Ref InstanceType
       SecurityGroups:
         - !Ref WebServerSecurityGroup
@@ -167,34 +146,27 @@ Resources:
       Tags: 
         - Key: "Name"
           Value: !Ref InstanceName
-      UserData: !Base64 
-        'Fn::Join':
-          - ''
-          - - |
-              #!/bin/bash -xe
-            - |
-              apt-get update -y && apt-get install pip && pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
-            - |
-              # Install the files and packages from the metadata
-            - '/opt/aws/bin/cfn-init -v '
-            - '         --stack '
-            - !Ref 'AWS::StackName'
-            - '         --resource WebServerInstance '
-            - '         --configsets InstallAndRun '
-            - '         --region '
-            - !Ref 'AWS::Region'
-            - |+
-
-            - |
-              # Signal the status from cfn-init
-            - '/opt/aws/bin/cfn-signal -e $? '
-            - '         --stack '
-            - !Ref 'AWS::StackName'
-            - '         --resource WebServerInstance '
-            - '         --region '
-            - !Ref 'AWS::Region'
-            - |+
-
+      UserData: !Sub |
+            #!/bin/bash -xe\n
+            yum update -y
+            yum install -y python3
+            yum install -y wget
+              
+            mkdir -p /opt/aws/bin
+            wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+            python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
+              
+            /opt/aws/bin/cfn-init -v
+              --stack '${AWS::StackName}'
+              --resource WebServerInstance
+              --configsets InstallAndRun
+              --region '${AWS::Region}
+            
+            /opt/aws/bin/cfn-signal -e $? 
+              --stack  '${AWS::StackName}'
+              --resource WebServerInstance 
+              --region '${AWS::Region}'
+  
   WebServerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
