@@ -210,9 +210,8 @@ Resources:
             --enable epel*
 
           # Instll required packages
-          yum update -y \
-            aws-cfn-bootstrap \
-            git \
+          yum update -y aws-cfn-bootstrap
+          yum install -y git \
             httpd24 \
             certbot \
             python2-certbot-apache

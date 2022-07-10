@@ -18,6 +18,14 @@ aws cloudformation create-stack \
 --parameters file://parameters/http.json
 ```
 
+Update the template
+```
+aws cloudformation update-stack \
+--stack-name http \
+--template-body file://templates/http.yaml \
+--parameters file://parameters/http.json
+```
+
 Delete stack
 ```
 aws cloudformation delete-stack \
