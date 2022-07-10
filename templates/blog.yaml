@@ -35,7 +35,7 @@ Resources:
           InstallAndRun:
             - Install
             - CheckoutGit
-            - StartServer
+            - RestartServer
         Install:
           files:
             /etc/cfn/cfn-hup.conf:
@@ -91,10 +91,6 @@ Resources:
                   DocumentRoot "/var/www/html"
                   ServerName "arbatov.me"
                   ServerAlias "www.arbatov.me"
-                  RewriteEngine on
-                  RewriteCond %{SERVER_NAME} =www.arbatov.me [OR]
-                  RewriteCond %{SERVER_NAME} =arbatov.me
-                  RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
                 </VirtualHost>
 
                 <IfModule dir_module>
@@ -152,7 +148,6 @@ Resources:
                 </IfModule>
 
                 IncludeOptional conf.d/*.conf
-                Include /etc/httpd/conf/httpd-le-ssl.conf
               mode: '000444'
               owner: root
               group: root
@@ -179,10 +174,10 @@ Resources:
               command: git clone !Ref GitRepository
             install_www_files:
               command: cp -r /home/ec2-user/arbatov.me/ /var/www/html/
-        StartServer:
+        RestartServer:
            commands:
             httpd_restart:
-              command: systemctl restart httpd      
+              command: service httpd restart    
     Properties:
       ImageId: !Ref InstanceImage
       InstanceType: !Ref InstanceType
@@ -196,38 +191,20 @@ Resources:
         Fn::Sub: |
           #!/bin/bash
 
-          yum update -y
-
-          # Required for certbot
-          wget \
-            -r \
-            --no-parent \
-            -A 'epel-release-*.rpm' \
-            https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
-          rpm -Uvh \
-          dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm
-          yum-config-manager \
-            --enable epel*
-
           # Instll required packages
+          yum update -y
           yum update -y aws-cfn-bootstrap
-          yum install -y git \
-            httpd24 \
-            certbot \
-            python2-certbot-apache
+          yum install -y \
+            git \
+            httpd24
 
           # Apache condigs
           groupadd apache
           usermod -a -G apache ec2-user
           chown -R ec2-user:apache /var/www
 
-          systemctl start httpd
-          systemctl enable httpd
-
-          # Certbot configs
-          certbot --non-interactive --agree-tos -m arbatovevgeny@gmail.com
-          echo '39 1,13 * * * root certbot renew --no-self-upgrade' > /tmp/crontab
-          crontab /tmp/mycrontab
+          service httpd start
+          service httpd enable
 
           /opt/aws/bin/cfn-init -v \
             --stack '${AWS::StackName}' \
@@ -247,10 +224,6 @@ Resources:
         - IpProtocol: tcp
           FromPort: '80'
           ToPort: '80'
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: '443'
-          ToPort: '443'
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: '22'
