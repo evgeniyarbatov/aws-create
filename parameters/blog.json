@@ -9,7 +9,7 @@
     },
     {
         "ParameterKey": "KeyName",
-        "ParameterValue": "aws_dev"
+        "ParameterValue": "blog"
     },
     {
         "ParameterKey": "InstanceType",
@@ -22,13 +22,5 @@
     {
         "ParameterKey": "GitRepository",
         "ParameterValue": "git@github.com:evgeniyarbatov/arbatov.me.git"
-    },
-    {
-        "ParameterKey": "GitName",
-        "ParameterValue": "Evgeny Arbatov"
-    },
-    {
-        "ParameterKey": "GitEmail",
-        "ParameterValue": "arbatovevgeny@gmail.com"
     }
 ]

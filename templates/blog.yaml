@@ -20,6 +20,12 @@ Parameters:
     Description: Name of instance
     Type: String
     Default: blog
+  GitRepository:
+    Description: Repository with www files
+    Type: String
+  IPAddress:
+    Description: Elastic IP address of this instance
+    Type: String
 Resources:
   WebServerInstance:
     Type: 'AWS::EC2::Instance'
@@ -158,6 +164,11 @@ Resources:
                 files:
                   - /etc/cfn/cfn-hup.conf
                   - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/httpd/conf/httpd.conf
         CheckoutGit:
           commands:
             set_name:
@@ -185,17 +196,20 @@ Resources:
         Fn::Sub: |
           #!/bin/bash
 
+          yum update -y
+
           # Required for certbot
           wget \
             -r \
             --no-parent \
             -A 'epel-release-*.rpm' \
             https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
-          rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm
-          yum-config-manager --enable epel*
+          rpm -Uvh \
+          dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm
+          yum-config-manager \
+            --enable epel*
 
           # Instll required packages
-          yum update -y
           yum update -y \
             aws-cfn-bootstrap \
             git \
@@ -204,8 +218,10 @@ Resources:
             python2-certbot-apache
 
           # Apache condigs
+          groupadd apache
           usermod -a -G apache ec2-user
           chown -R ec2-user:apache /var/www
+
           systemctl start httpd
           systemctl enable httpd
 
