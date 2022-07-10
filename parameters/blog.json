@@ -1,0 +1,34 @@
+[
+    {
+        "ParameterKey": "IPAddress",
+        "ParameterValue": "18.142.210.67"
+    },
+    {
+        "ParameterKey": "InstanceImage",
+        "ParameterValue": " ami-0ba35dc9caf73d1c7"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "aws_dev"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.nano"
+    },
+    {
+        "ParameterKey": "InstanceName",
+        "ParameterValue": "blog"
+    },
+    {
+        "ParameterKey": "GitRepository",
+        "ParameterValue": "git@github.com:evgeniyarbatov/arbatov.me.git"
+    },
+    {
+        "ParameterKey": "GitName",
+        "ParameterValue": "Evgeny Arbatov"
+    },
+    {
+        "ParameterKey": "GitEmail",
+        "ParameterValue": "arbatovevgeny@gmail.com"
+    }
+]

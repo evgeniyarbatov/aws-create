@@ -1,0 +1,254 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Create blog
+Parameters:
+  InstanceImage:
+    Description: Instance image suitable for your AWS region
+    Type: String
+    Default: ami-0ba35dc9caf73d1c7
+  KeyName:
+    Description: EC2 keypair
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  InstanceType:
+    Description: EC2 instance type
+    Type: String
+    Default: t2.nano
+    AllowedValues:
+      - t2.nano
+    ConstraintDescription: must be a valid EC2 instance type.
+  InstanceName:
+    Description: Name of instance
+    Type: String
+    Default: blog
+Resources:
+  WebServerInstance:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          InstallAndRun:
+            - Install
+            - CheckoutGit
+            - StartServer
+        Install:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Sub | 
+                [main]
+                stack='${AWS::StackId}'
+                region='${AWS::Region}'
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.WebServerInstance.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --stack '${AWS::StackName}' --resource WebServerInstance --configsets InstallAndRun --region '${AWS::Region}'
+                runas=root
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/httpd/conf/httpd.conf:
+              content: !Sub |
+                ServerRoot "/etc/httpd"
+
+                Listen 80
+
+                Include conf.modules.d/*.conf
+
+                User apache
+                Group apache
+
+                ServerAdmin root@localhost
+
+                <Directory />
+                    AllowOverride none
+                    Require all denied
+                </Directory>
+
+                DocumentRoot "/var/www/html"
+
+                <Directory "/var/www">
+                    AllowOverride None
+                    Require all granted
+                </Directory>
+
+                <Directory "/var/www/html">
+                    Options Indexes FollowSymLinks
+                    AllowOverride All
+                    Require all granted
+                </Directory>
+
+                <VirtualHost *:80>
+                  DocumentRoot "/var/www/html"
+                  ServerName "arbatov.me"
+                  ServerAlias "www.arbatov.me"
+                  RewriteEngine on
+                  RewriteCond %{SERVER_NAME} =www.arbatov.me [OR]
+                  RewriteCond %{SERVER_NAME} =arbatov.me
+                  RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+                </VirtualHost>
+
+                <IfModule dir_module>
+                    DirectoryIndex index.html
+                </IfModule>
+
+                <Files ".ht*">
+                    Require all denied
+                </Files>
+
+                ErrorLog "logs/error_log"
+
+                LogLevel warn
+
+                <IfModule log_config_module>
+                    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
+                    LogFormat "%h %l %u %t \"%r\" %>s %b" common
+
+                    <IfModule logio_module>
+                      LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
+                    </IfModule>
+                    CustomLog "logs/access_log" combined
+                </IfModule>
+
+                <IfModule alias_module>
+                    ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
+                </IfModule>
+
+                <Directory "/var/www/cgi-bin">
+                    AllowOverride None
+                    Options None
+                    Require all granted
+                </Directory>
+
+                <IfModule mime_module>
+                    TypesConfig /etc/mime.types
+
+                    AddType application/x-compress .Z
+                    AddType application/x-gzip .gz .tgz
+
+                    AddType text/html .shtml
+                    AddOutputFilter INCLUDES .shtml
+                </IfModule>
+
+                AddDefaultCharset UTF-8
+
+                <IfModule mime_magic_module>
+                    MIMEMagicFile conf/magic
+                </IfModule>
+
+                EnableSendfile on
+
+                <IfModule mod_http2.c>
+                    Protocols h2 h2c http/1.1
+                </IfModule>
+
+                IncludeOptional conf.d/*.conf
+                Include /etc/httpd/conf/httpd-le-ssl.conf
+              mode: '000444'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        CheckoutGit:
+          commands:
+            set_name:
+              command: git config --global user.name !Ref 'GitName'
+            set_email:
+              command: git config --global user.email !Ref 'GitEmail'
+            checkout:
+              command: git clone !Ref GitRepository
+            install_www_files:
+              command: cp -r /home/ec2-user/arbatov.me/ /var/www/html/
+        StartServer:
+           commands:
+            httpd_restart:
+              command: systemctl restart httpd      
+    Properties:
+      ImageId: !Ref InstanceImage
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref WebServerSecurityGroup
+      KeyName: !Ref KeyName
+      Tags: 
+        - Key: "Name"
+          Value: !Ref InstanceName
+      UserData: !Base64 
+        Fn::Sub: |
+          #!/bin/bash
+
+          # Required for certbot
+          wget \
+            -r \
+            --no-parent \
+            -A 'epel-release-*.rpm' \
+            https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/
+          rpm -Uvh dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-release-*.rpm
+          yum-config-manager --enable epel*
+
+          # Instll required packages
+          yum update -y
+          yum update -y \
+            aws-cfn-bootstrap \
+            git \
+            httpd24 \
+            certbot \
+            python2-certbot-apache
+
+          # Apache condigs
+          usermod -a -G apache ec2-user
+          chown -R ec2-user:apache /var/www
+          systemctl start httpd
+          systemctl enable httpd
+
+          # Certbot configs
+          certbot --non-interactive --agree-tos -m arbatovevgeny@gmail.com
+          echo '39 1,13 * * * root certbot renew --no-self-upgrade' > /tmp/crontab
+          crontab /tmp/mycrontab
+
+          /opt/aws/bin/cfn-init -v \
+            --stack '${AWS::StackName}' \
+            --resource WebServerInstance \
+            --configsets InstallAndRun \
+            --region '${AWS::Region}'
+          
+          /opt/aws/bin/cfn-signal -e $? \
+            --stack  '${AWS::StackName}' \
+            --resource WebServerInstance \
+            --region '${AWS::Region}'
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Enable HTTP(S) and SSH access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0
+  IPAssoc:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref 'WebServerInstance'
+      EIP: !Ref 'IPAddress'
+Outputs:
+  DNS:
+    Description: DNS name
+    Value: !GetAtt 
+      - WebServerInstance
+      - PublicDnsName
