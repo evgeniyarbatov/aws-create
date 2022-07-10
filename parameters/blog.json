@@ -21,6 +21,6 @@
     },
     {
         "ParameterKey": "GitRepository",
-        "ParameterValue": "git@github.com:evgeniyarbatov/arbatov.me.git"
+        "ParameterValue": "https://github.com/evgeniyarbatov/arbatov.me.git"
     }
 ]

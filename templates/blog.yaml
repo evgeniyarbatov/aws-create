@@ -61,6 +61,7 @@ Resources:
                 ServerRoot "/etc/httpd"
 
                 Listen 80
+                Listen 443
 
                 Include conf.modules.d/*.conf
 
@@ -86,11 +87,18 @@ Resources:
                     AllowOverride All
                     Require all granted
                 </Directory>
-
+                
                 <VirtualHost *:80>
                   DocumentRoot "/var/www/html"
                   ServerName "arbatov.me"
                   ServerAlias "www.arbatov.me"
+                </VirtualHost>
+
+                <VirtualHost *:443>
+                  DocumentRoot "/var/www/html"
+                  ServerName "arbatov.me"
+                  ServerAlias "www.arbatov.me"
+                  Redirect / http://arbatov.me/
                 </VirtualHost>
 
                 <IfModule dir_module>
@@ -102,13 +110,11 @@ Resources:
                 </Files>
 
                 ErrorLog "logs/error_log"
-
                 LogLevel warn
 
                 <IfModule log_config_module>
                     LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
                     LogFormat "%h %l %u %t \"%r\" %>s %b" common
-
                     <IfModule logio_module>
                       LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
                     </IfModule>
@@ -127,10 +133,8 @@ Resources:
 
                 <IfModule mime_module>
                     TypesConfig /etc/mime.types
-
                     AddType application/x-compress .Z
                     AddType application/x-gzip .gz .tgz
-
                     AddType text/html .shtml
                     AddOutputFilter INCLUDES .shtml
                 </IfModule>
@@ -170,10 +174,12 @@ Resources:
               command: git config --global user.name !Ref 'GitName'
             set_email:
               command: git config --global user.email !Ref 'GitEmail'
+            github_knonwn_hosts:
+              command: ssh-keyscan github.com >> ~/.ssh/known_hosts
             checkout:
-              command: git clone !Ref GitRepository
+              command: cd /home/ec2-user/ && git clone !Ref GitRepository
             install_www_files:
-              command: cp -r /home/ec2-user/arbatov.me/ /var/www/html/
+              command: cd /home/ec2-user/arbatov.me/_site && cp -r * /var/www/html/
         RestartServer:
            commands:
             httpd_restart:
@@ -224,6 +230,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: '80'
           ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: '22'
