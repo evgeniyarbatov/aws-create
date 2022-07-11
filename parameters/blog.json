@@ -22,5 +22,9 @@
     {
         "ParameterKey": "GitRepository",
         "ParameterValue": "https://github.com/evgeniyarbatov/arbatov.me.git"
+    },
+    {
+        "ParameterKey": "NodeSourceRepo",
+        "ParameterValue": "https://rpm.nodesource.com/setup_16.x"
     }
 ]

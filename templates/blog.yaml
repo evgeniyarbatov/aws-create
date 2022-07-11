@@ -26,6 +26,10 @@ Parameters:
   IPAddress:
     Description: Elastic IP address of this instance
     Type: String
+  NodeSourceRepo:
+    Description: Nodesource RPM location
+    Type: String
+    Default: https://rpm.nodesource.com/setup_16.x
 Resources:
   WebServerInstance:
     Type: 'AWS::EC2::Instance'
@@ -35,7 +39,8 @@ Resources:
           InstallAndRun:
             - Install
             - CheckoutGit
-            - RestartServer
+            - NpmInstall
+            - StartServer
         Install:
           files:
             /etc/cfn/cfn-hup.conf:
@@ -56,105 +61,30 @@ Resources:
               mode: '000400'
               owner: root
               group: root
-            /etc/httpd/conf/httpd.conf:
-              content: !Sub |
-                ServerRoot "/etc/httpd"
+            /home/ec2-user/app.js:
+              content: |
+                  const express = require('express')
+                  const bodyParser = require('body-parser')
 
-                Listen 80
-                Listen 443
+                  require('console-stamp')(console, '[HH:MM:ss.l]');
 
-                Include conf.modules.d/*.conf
+                  const app = express()
+                  const jsonParser = bodyParser.json()
 
-                User apache
-                Group apache
+                  module.exports = app
 
-                ServerAdmin root@localhost
-
-                <Directory />
-                    AllowOverride none
-                    Require all denied
-                </Directory>
-
-                DocumentRoot "/var/www/html"
-
-                <Directory "/var/www">
-                    AllowOverride None
-                    Require all granted
-                </Directory>
-
-                <Directory "/var/www/html">
-                    Options Indexes FollowSymLinks
-                    AllowOverride All
-                    Require all granted
-                </Directory>
-                
-                <VirtualHost *:80>
-                  DocumentRoot "/var/www/html"
-                  ServerName "arbatov.me"
-                  ServerAlias "www.arbatov.me"
-                </VirtualHost>
-
-                <VirtualHost *:443>
-                  DocumentRoot "/var/www/html"
-                  ServerName "arbatov.me"
-                  ServerAlias "www.arbatov.me"
-                  Redirect / http://arbatov.me/
-                </VirtualHost>
-
-                <IfModule dir_module>
-                    DirectoryIndex index.html
-                </IfModule>
-
-                <Files ".ht*">
-                    Require all denied
-                </Files>
-
-                ErrorLog "logs/error_log"
-                LogLevel warn
-
-                <IfModule log_config_module>
-                    LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combined
-                    LogFormat "%h %l %u %t \"%r\" %>s %b" common
-                    <IfModule logio_module>
-                      LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %I %O" combinedio
-                    </IfModule>
-                    CustomLog "logs/access_log" combined
-                </IfModule>
-
-                <IfModule alias_module>
-                    ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
-                </IfModule>
-
-                <Directory "/var/www/cgi-bin">
-                    AllowOverride None
-                    Options None
-                    Require all granted
-                </Directory>
-
-                <IfModule mime_module>
-                    TypesConfig /etc/mime.types
-                    AddType application/x-compress .Z
-                    AddType application/x-gzip .gz .tgz
-                    AddType text/html .shtml
-                    AddOutputFilter INCLUDES .shtml
-                </IfModule>
-
-                AddDefaultCharset UTF-8
-
-                <IfModule mime_magic_module>
-                    MIMEMagicFile conf/magic
-                </IfModule>
-
-                EnableSendfile on
-
-                <IfModule mod_http2.c>
-                    Protocols h2 h2c http/1.1
-                </IfModule>
-
-                IncludeOptional conf.d/*.conf
-              mode: '000444'
-              owner: root
-              group: root
+                  app.use(express.static('/home/ec2-user/arbatov.me/_site'))
+              mode: '000644'
+              owner: ec2-user
+              group: ec2-user
+            /home/ec2-user/server.js:
+              content: |
+                  const app = require("./app")
+                  const port = 80
+                  app.listen(port, () => console.log(`The server is listening`))
+              mode: '000644'
+              owner: ec2-user
+              group: ec2-user
           services:
             sysvinit:
               cfn-hup:
@@ -163,11 +93,6 @@ Resources:
                 files:
                   - /etc/cfn/cfn-hup.conf
                   - /etc/cfn/hooks.d/cfn-auto-reloader.conf
-              httpd:
-                enabled: 'true'
-                ensureRunning: 'true'
-                files:
-                  - /etc/httpd/conf/httpd.conf
         CheckoutGit:
           commands:
             set_name:
@@ -178,12 +103,16 @@ Resources:
               command: ssh-keyscan github.com >> ~/.ssh/known_hosts
             checkout:
               command: cd /home/ec2-user/ && git clone !Ref GitRepository
-            install_www_files:
-              command: cd /home/ec2-user/arbatov.me/_site && cp -r * /var/www/html/
-        RestartServer:
+        NpmInstall:
+          commands:
+            forever_install:
+              command: npm install -y -g forever
+            npm_packages:
+              command: npm install --prefix /home/ec2-user -y express body-parser console-stamp
+        StartServer:
            commands:
-            httpd_restart:
-              command: service httpd restart    
+            forever_start:
+              command: forever start /home/ec2-user/server.js
     Properties:
       ImageId: !Ref InstanceImage
       InstanceType: !Ref InstanceType
@@ -197,20 +126,12 @@ Resources:
         Fn::Sub: |
           #!/bin/bash
 
-          # Instll required packages
           yum update -y
           yum update -y aws-cfn-bootstrap
-          yum install -y \
-            git \
-            httpd24
+          yum install -y git 
 
-          # Apache condigs
-          groupadd apache
-          usermod -a -G apache ec2-user
-          chown -R ec2-user:apache /var/www
-
-          service httpd start
-          service httpd enable
+          curl -sL '${NodeSourceRepo}' | sudo bash -
+          yum install -y nodejs
 
           /opt/aws/bin/cfn-init -v \
             --stack '${AWS::StackName}' \
