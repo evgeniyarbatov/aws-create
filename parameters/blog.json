@@ -5,7 +5,7 @@
     },
     {
         "ParameterKey": "InstanceImage",
-        "ParameterValue": " ami-0ba35dc9caf73d1c7"
+        "ParameterValue": "ami-0c802847a7dd848c0"
     },
     {
         "ParameterKey": "KeyName",
