@@ -38,8 +38,8 @@ Resources:
         configSets:
           InstallAndRun:
             - Install
-            - CheckoutGit
             - NpmInstall
+            - CheckoutGit
             - StartServer
         Install:
           files:
@@ -104,6 +104,12 @@ Resources:
                 files:
                   - /etc/cfn/cfn-hup.conf
                   - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        NpmInstall:
+          commands:
+            forever_install:
+              command: npm install -y -g forever
+            npm_packages:
+              command: npm install --prefix /home/ec2-user -y express
         CheckoutGit:
           commands:
             set_name:
@@ -114,12 +120,6 @@ Resources:
               command: ssh-keyscan github.com >> ~/.ssh/known_hosts
             checkout:
               command: cd /home/ec2-user/ && git clone '${GitRepository}'
-        NpmInstall:
-          commands:
-            forever_install:
-              command: npm install -y -g forever
-            npm_packages:
-              command: npm install --prefix /home/ec2-user -y express
         StartServer:
            commands:
             forever_start:
