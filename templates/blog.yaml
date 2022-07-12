@@ -113,7 +113,7 @@ Resources:
             github_knonwn_hosts:
               command: ssh-keyscan github.com >> ~/.ssh/known_hosts
             checkout:
-              command: cd /home/ec2-user/ && git clone !Ref GitRepository
+              command: cd /home/ec2-user/ && git clone ${GitRepository}
         NpmInstall:
           commands:
             forever_install:
