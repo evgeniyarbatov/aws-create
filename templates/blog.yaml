@@ -119,13 +119,13 @@ Resources:
               command: npm install --prefix /home/ec2-user -y express
         CheckoutGit:
           commands:
-            set_name:
+            01_set_name:
               command: git config --global user.name '${GitName}'
-            set_email:
+            02_set_email:
               command: git config --global user.email '${GitEmail}'
-            github_knonwn_hosts:
+            03_github_knonwn_hosts:
               command: ssh-keyscan github.com >> ~/.ssh/known_hosts
-            checkout:
+            04_checkout:
               command: cd /home/ec2-user/ && git clone '${GitRepository}'
         StartServer:
            commands:
