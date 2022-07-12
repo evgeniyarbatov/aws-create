@@ -107,13 +107,13 @@ Resources:
         CheckoutGit:
           commands:
             set_name:
-              command: git config --global user.name !Ref 'GitName'
+              command: git config --global user.name '${GitName}'
             set_email:
-              command: git config --global user.email !Ref 'GitEmail'
+              command: git config --global user.email '${GitEmail}'
             github_knonwn_hosts:
               command: ssh-keyscan github.com >> ~/.ssh/known_hosts
             checkout:
-              command: cd /home/ec2-user/ && git clone ${GitRepository}
+              command: cd /home/ec2-user/ && git clone '${GitRepository}'
         NpmInstall:
           commands:
             forever_install:
