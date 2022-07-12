@@ -61,12 +61,6 @@ Resources:
               mode: '000400'
               owner: root
               group: root
-            /home/ec2-user/crontab:
-              content: |
-                39      1,13    *       *       *       root    certbot renew --no-self-upgrade
-              mode: '000644'
-              owner: ec2-user
-              group: ec2-user
             /home/ec2-user/app.js:
               content: |
                 const express = require('express')
@@ -174,7 +168,7 @@ Resources:
           curl -sL '${NodeSourceRepo}' | sudo bash -
           yum install -y nodejs
 
-          crontab < /home/ec2-user/crontab
+          echo '39      1,13    *       *       *       root    certbot renew --no-self-upgrade' | crontab
 
           /opt/aws/bin/cfn-init -v \
             --stack '${AWS::StackName}' \
