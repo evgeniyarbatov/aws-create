@@ -61,38 +61,51 @@ Resources:
               mode: '000400'
               owner: root
               group: root
+            /home/ec2-user/crontab:
+              content: |
+                39      1,13    *       *       *       root    certbot renew --no-self-upgrade
+              mode: '000644'
+              owner: ec2-user
+              group: ec2-user
             /home/ec2-user/app.js:
               content: |
                 const express = require('express')
                 const http = require('http')
                 const https = require('https')
                 const fs = require('fs')
+                const path = require('path')
 
                 httpApp = express(),
                 app = express(),
 
                 certPath = "cert";
 
-                var httpsOptions = {
-                    key: fs.readFileSync(path.join(certPath, "ssl.key")),
-                    cert: fs.readFileSync(path.join(certPath, "ssl.crt"))
-                };
-                httpApp.get("*", (req, res, next) => 
-                    res.redirect("https://" + req.headers.host + "/" + req.path);
-                );
+                // Run to get the actual certs:
+                // $ sudo certbot certonly --manual --domain 'arbatov.me' -m arbatovevgeny@gmail.com
+
+                // var httpsOptions = {
+                //     key: fs.readFileSync(path.join(certPath, "ssl.key")),
+                //     cert: fs.readFileSync(path.join(certPath, "ssl.crt"))
+                // };
+                // httpApp.get("*", (req, res, next) => 
+                //     res.redirect("https://" + req.headers.host + "/" + req.path)
+                // );
 
                 app.enable('trust proxy')
-                app.use(express.static('/home/ec2-user/arbatov.me/_site'))
+                app.use(express.static(
+                    '/home/ec2-user/arbatov.me/_site', 
+                    { dotfiles: 'allow' } 
+                ))
 
                 http.createServer(httpApp).listen(
                     80, 
                     () => console.log('Express HTTP server listening on port ' + httpApp.get('port'))
                 )
 
-                https.createServer(httpApp).listen(
-                    443, 
-                    () => console.log('Express HTTP server listening on port ' + httpApp.get('port'))
-                )
+                // https.createServer(httpApp).listen(
+                //     443, 
+                //     () => console.log('Express HTTP server listening on port ' + httpApp.get('port'))
+                // )
               mode: '000644'
               owner: ec2-user
               group: ec2-user
@@ -155,11 +168,13 @@ Resources:
           yum install -y git 
 
           amazon-linux-extras install epel -y
-          yum install -y certbot python2-certbot-apache
+          yum install -y certbot
           certbot --non-interactive --agree-tos -m arbatovevgeny@gmail.com
 
           curl -sL '${NodeSourceRepo}' | sudo bash -
           yum install -y nodejs
+
+          crontab < /home/ec2-user/crontab
 
           /opt/aws/bin/cfn-init -v \
             --stack '${AWS::StackName}' \
