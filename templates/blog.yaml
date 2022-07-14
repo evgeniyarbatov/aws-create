@@ -77,6 +77,9 @@ Resources:
                 httpApp = express()
                 app = express()
 
+                httpApp.set('port', 80);
+                app.set('port', 443);
+
                 var httpsOptions = {
                     key: fs.readFileSync("/etc/letsencrypt/live/arbatov.me/privkey.pem"),
                     cert: fs.readFileSync("/etc/letsencrypt/live/arbatov.me/fullchain.pem")
@@ -92,15 +95,13 @@ Resources:
                     { dotfiles: 'allow' } 
                 ))
 
-                http.createServer(app).listen(
-                    80, 
-                    () => console.log('Express HTTP server listening on port 80')
-                )
+                http.createServer(httpApp).listen(httpApp.get('port'), () => {
+                    console.log('Express HTTP server listening on port ' + httpApp.get('port'))
+                });
 
-                https.createServer(httpApp).listen(
-                    443, 
-                    () => console.log('Express HTTP server listening on port 443')
-                )
+                https.createServer(httpsOptions, app).listen(app.get('port'), () => {
+                    console.log('Express HTTPS server listening on port ' + app.get('port'));
+                });
               mode: '000644'
               owner: ec2-user
               group: ec2-user
